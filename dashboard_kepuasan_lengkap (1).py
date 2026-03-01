@@ -9,55 +9,57 @@ from sklearn.preprocessing import StandardScaler
 # ==========================================================
 # KONFIGURASI HALAMAN
 # ==========================================================
-st.set_page_config(page_title="Pink Dashboard", layout="wide")
+st.set_page_config(page_title="Dashboard Analisis Hasil Siswa", layout="wide")
 
 # ==========================================================
-# 🎀 FULL PINK THEME
+# 🌸 SOFT PINK THEME (TIDAK TOO MUCH)
 # ==========================================================
 st.markdown("""
 <style>
-html, body, [class*="css"]  {
-    background-color: #ffe6f2;
+body {
+    background-color: #fff5fa;
 }
-
 .main {
-    background: linear-gradient(to bottom right, #ffd6ec, #fff0f8);
+    background: linear-gradient(to right, #fff0f6, #ffe6f2);
 }
-
 h1, h2, h3 {
-    color: #cc0066;
-    text-align: center;
+    color: #c2185b;
 }
-
 div[data-testid="metric-container"] {
-    background-color: #fff0f6;
-    border: 2px solid #ff99cc;
-    padding: 15px;
-    border-radius: 20px;
+    background-color: #ffe6f2;
+    border: 1px solid #f8bbd0;
+    padding: 12px;
+    border-radius: 12px;
 }
-
 .stButton>button {
-    background-color: #ff66b2;
+    background-color: #ec407a;
     color: white;
-    border-radius: 20px;
-    height: 3em;
-    width: 100%;
-    font-size: 16px;
+    border-radius: 8px;
 }
-
 .stButton>button:hover {
-    background-color: #ff3385;
+    background-color: #d81b60;
     color: white;
+}
+section[data-testid="stSidebar"] {
+    background-color: #fff0f6;
 }
 </style>
 """, unsafe_allow_html=True)
 
 # ==========================================================
-# HEADER
+# IDENTITAS DI KIRI ATAS (ATAS JUDUL)
 # ==========================================================
-st.title("🌸 Dashboard Analisis Hasil Siswa 🌸")
-st.markdown("### 💖 Desta Saputri 💖")
-st.markdown("NIM: 06111282429040")
+st.markdown(
+    "<p style='text-align:left; font-weight:500; color:#ad1457;'>"
+    "Desta Saputri<br>NIM: 06111282429040"
+    "</p>",
+    unsafe_allow_html=True
+)
+
+st.title("🌸📊 Dashboard Analisis Hasil Siswa")
+st.markdown("### Analisis Performa Akademik Berbasis Data")
+
+st.divider()
 
 # ==========================================================
 # LOAD DATA
@@ -66,7 +68,7 @@ df = pd.read_excel("data_simulasi_50_siswa_20_soal.xlsx")
 indikator = df.apply(pd.to_numeric, errors="coerce")
 
 # ==========================================================
-# NAVIGASI SLIDE
+# NAVIGASI HALAMAN (NEXT BUTTON)
 # ==========================================================
 if "page" not in st.session_state:
     st.session_state.page = 0
@@ -81,14 +83,20 @@ def prev_page():
 # PAGE 0 – KPI
 # ==========================================================
 if st.session_state.page == 0:
-    st.header("💗 Ringkasan Performa Kelas")
 
     mean_scores = indikator.mean()
     nilai_rata2_kelas = indikator.mean(axis=1).mean()
 
-    col1, col2 = st.columns(2)
-    col1.metric("📈 Rata-rata Kelas", f"{nilai_rata2_kelas:.2f}")
-    col2.metric("👩‍🎓 Jumlah Siswa", len(df))
+    def kategori_nilai(x):
+        if x >= 85: return "Sangat Baik"
+        elif x >= 75: return "Baik"
+        elif x >= 65: return "Cukup"
+        else: return "Perlu Bimbingan"
+
+    col1, col2, col3 = st.columns(3)
+    col1.metric("Rata-rata Kelas", f"{nilai_rata2_kelas:.2f}")
+    col2.metric("Kategori", kategori_nilai(nilai_rata2_kelas))
+    col3.metric("Jumlah Siswa", len(df))
 
     st.button("Next ➝", on_click=next_page)
 
@@ -96,16 +104,17 @@ if st.session_state.page == 0:
 # PAGE 1 – RATA-RATA PER SOAL
 # ==========================================================
 elif st.session_state.page == 1:
-    st.header("🌺 Rata-rata Nilai per Soal")
+
+    st.header("Rata-rata Nilai per Soal")
 
     mean_scores = indikator.mean()
 
-    fig, ax = plt.subplots(figsize=(10,4))
-    ax.bar(mean_scores.index, mean_scores.values, color="#ff66b2")
-    ax.set_ylabel("Rata-rata")
-    ax.tick_params(axis='x', rotation=90)
+    fig_soal, ax_soal = plt.subplots(figsize=(10,4))
+    ax_soal.bar(mean_scores.index, mean_scores.values, color="#ec407a")
+    ax_soal.set_ylabel("Rata-rata Nilai")
+    ax_soal.tick_params(axis='x', rotation=90)
 
-    st.pyplot(fig)
+    st.pyplot(fig_soal)
 
     col1, col2 = st.columns(2)
     col1.button("⬅ Previous", on_click=prev_page)
@@ -115,20 +124,21 @@ elif st.session_state.page == 1:
 # PAGE 2 – KORELASI
 # ==========================================================
 elif st.session_state.page == 2:
-    st.header("🌸 Korelasi Antar Soal")
+
+    st.header("Korelasi Antar Soal")
 
     corr = indikator.corr()
 
-    fig, ax = plt.subplots(figsize=(7,6))
-    im = ax.imshow(corr, cmap="RdPu", vmin=-1, vmax=1)
-    plt.colorbar(im, ax=ax)
+    fig_corr, ax_corr = plt.subplots(figsize=(7,6))
+    im = ax_corr.imshow(corr, cmap="RdPu", vmin=-1, vmax=1)
+    plt.colorbar(im, ax=ax_corr)
 
-    ax.set_xticks(range(len(corr.columns)))
-    ax.set_yticks(range(len(corr.columns)))
-    ax.set_xticklabels(corr.columns, rotation=90)
-    ax.set_yticklabels(corr.columns)
+    ax_corr.set_xticks(range(len(corr.columns)))
+    ax_corr.set_yticks(range(len(corr.columns)))
+    ax_corr.set_xticklabels(corr.columns, rotation=90)
+    ax_corr.set_yticklabels(corr.columns)
 
-    st.pyplot(fig)
+    st.pyplot(fig_corr)
 
     col1, col2 = st.columns(2)
     col1.button("⬅ Previous", on_click=prev_page)
@@ -138,24 +148,27 @@ elif st.session_state.page == 2:
 # PAGE 3 – REGRESI
 # ==========================================================
 elif st.session_state.page == 3:
-    st.header("🌷 Analisis Regresi")
 
-    target_index = 19  # Soal 20
+    st.header("Analisis Regresi")
+
+    target_index = 19
 
     X = sm.add_constant(indikator.drop(indikator.columns[target_index], axis=1))
     y = indikator.iloc[:, target_index]
 
     model = sm.OLS(y, X, missing="drop").fit()
     coef = model.params[1:]
+    r2 = model.rsquared
 
-    fig, ax = plt.subplots(figsize=(10,4))
-    ax.bar(coef.index, coef.values, color="#ff66b2")
-    ax.axhline(0, linestyle="--")
-    ax.tick_params(axis='x', rotation=90)
+    fig_reg, ax_reg = plt.subplots(figsize=(10,5))
+    ax_reg.bar(coef.index, coef.values, color="#ec407a")
+    ax_reg.axhline(0, linestyle="--")
+    ax_reg.tick_params(axis='x', rotation=90)
 
-    st.pyplot(fig)
+    st.pyplot(fig_reg)
 
-    st.success(f"Soal paling berpengaruh: {coef.abs().idxmax()} 💖")
+    st.success(f"Soal paling berpengaruh: {coef.abs().idxmax()}")
+    st.info(f"Model menjelaskan {r2*100:.1f}% variasi nilai")
 
     col1, col2 = st.columns(2)
     col1.button("⬅ Previous", on_click=prev_page)
@@ -165,7 +178,8 @@ elif st.session_state.page == 3:
 # PAGE 4 – SEGMENTASI
 # ==========================================================
 elif st.session_state.page == 4:
-    st.header("🎀 Segmentasi Siswa")
+
+    st.header("Segmentasi Performa Siswa")
 
     scaler = StandardScaler()
     X_scaled = scaler.fit_transform(indikator.fillna(indikator.mean()))
@@ -182,21 +196,21 @@ elif st.session_state.page == 4:
     angles = np.linspace(0, 2*np.pi, len(labels), endpoint=False).tolist()
     angles += angles[:1]
 
-    fig = plt.figure(figsize=(6,6))
-    ax = plt.subplot(polar=True)
+    fig_rad = plt.figure(figsize=(6,6))
+    ax_rad = plt.subplot(polar=True)
 
     for i, row in cluster_mean.iterrows():
         values = row[labels].tolist()
         values += values[:1]
-        ax.plot(angles, values, label=f"Cluster {i}")
-        ax.fill(angles, values, alpha=0.2)
+        ax_rad.plot(angles, values, label=f"Cluster {i}")
+        ax_rad.fill(angles, values, alpha=0.2)
 
-    ax.set_thetagrids(np.degrees(angles[:-1]), labels)
-    ax.set_title("Radar Segmentasi 🌸")
-    ax.legend()
+    ax_rad.set_thetagrids(np.degrees(angles[:-1]), labels)
+    ax_rad.set_title("Radar Segmentasi")
+    ax_rad.legend(loc="upper right")
 
-    st.pyplot(fig)
+    st.pyplot(fig_rad)
 
     col1, col2 = st.columns(2)
     col1.button("⬅ Previous", on_click=prev_page)
-    col2.button("🔄 Kembali ke Awal", on_click=lambda: st.session_state.update(page=0))
+    col2.button("Kembali ke Awal", on_click=lambda: st.session_state.update(page=0))
