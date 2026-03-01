@@ -7,39 +7,34 @@ from sklearn.cluster import KMeans
 from sklearn.preprocessing import StandardScaler
 
 # ==========================================================
-# KONFIGURASI
+# KONFIGURASI HALAMAN
 # ==========================================================
-st.set_page_config(page_title="Dashboard Analisis", layout="wide")
+st.set_page_config(page_title="Dashboard Analisis Hasil Siswa", layout="wide")
 
 # ==========================================================
-# 🌸 FULL PINK BACKGROUND
+# SOFT PINK THEME
 # ==========================================================
 st.markdown("""
 <style>
 html, body, .stApp {
     background-color: #ffd9ec;
 }
-
 .main {
     background-color: #ffc2e0;
 }
-
 h1, h2, h3 {
-    color: #ad1457;
+    color: #880e4f;
 }
-
 div[data-testid="metric-container"] {
     background-color: #ffe6f2;
     border-radius: 12px;
     padding: 15px;
 }
-
 .stButton>button {
     background-color: #d81b60;
     color: white;
     border-radius: 8px;
 }
-
 .stButton>button:hover {
     background-color: #ad1457;
     color: white;
@@ -51,7 +46,7 @@ div[data-testid="metric-container"] {
 # IDENTITAS (KIRI ATAS)
 # ==========================================================
 st.markdown(
-    "<p style='text-align:left; font-weight:500; color:#880e4f;'>"
+    "<p style='text-align:left; font-weight:500; color:#6a1b9a;'>"
     "Desta Saputri<br>NIM: 06111282429040"
     "</p>",
     unsafe_allow_html=True
@@ -68,7 +63,7 @@ df = pd.read_excel("data_simulasi_50_siswa_20_soal.xlsx")
 indikator = df.apply(pd.to_numeric, errors="coerce")
 
 # ==========================================================
-# INTERAKTIF NAVIGASI
+# NAVIGASI HALAMAN
 # ==========================================================
 if "page" not in st.session_state:
     st.session_state.page = 0
@@ -88,16 +83,16 @@ if st.session_state.page == 0:
 
     st.header("Ringkasan Performa")
 
-    nilai_rata2_kelas = indikator.mean(axis=1).mean()
+    rata_kelas = indikator.mean(axis=1).mean()
 
     col1, col2 = st.columns(2)
-    col1.metric("Rata-rata Kelas", f"{nilai_rata2_kelas:.2f}")
+    col1.metric("Rata-rata Kelas", f"{rata_kelas:.2f}")
     col2.metric("Jumlah Siswa", len(df))
 
     st.button("Next ➝", on_click=next_page)
 
 # ==========================================================
-# PAGE 1 – RATA-RATA PER SOAL
+# PAGE 1 – RATA-RATA PER SOAL (INTERAKTIF)
 # ==========================================================
 elif st.session_state.page == 1:
 
@@ -105,15 +100,24 @@ elif st.session_state.page == 1:
 
     mean_scores = indikator.mean()
 
-    fig, ax = plt.subplots(figsize=(10,4))
-    ax.bar(mean_scores.index, mean_scores.values, color="#c2185b")
-    ax.set_ylabel("Rata-rata")
-    ax.tick_params(axis='x', rotation=90)
+    soal_terpilih = st.selectbox(
+        "Pilih Soal yang Ingin Ditampilkan:",
+        mean_scores.index
+    )
+
+    fig, ax = plt.subplots(figsize=(6,4))
+    ax.bar(soal_terpilih, mean_scores[soal_terpilih],
+           color="#ad1457")
+    ax.set_ylim(0, indikator.max().max())
+    ax.set_ylabel("Rata-rata Nilai")
+    ax.set_title(f"Rata-rata Nilai {soal_terpilih}")
 
     st.pyplot(fig)
 
-    soal = st.selectbox("Lihat detail soal:", mean_scores.index)
-    st.info(f"Rata-rata nilai {soal}: {mean_scores[soal]:.2f}")
+    st.success(
+        f"Rata-rata nilai {soal_terpilih}: "
+        f"{mean_scores[soal_terpilih]:.2f}"
+    )
 
     col1, col2 = st.columns(2)
     col1.button("⬅ Previous", on_click=prev_page)
@@ -160,13 +164,15 @@ elif st.session_state.page == 3:
     coef = model.params[1:]
 
     fig, ax = plt.subplots(figsize=(10,4))
-    ax.bar(coef.index, coef.values, color="#ad1457")
+    ax.bar(coef.index, coef.values, color="#880e4f")
     ax.axhline(0, linestyle="--")
     ax.tick_params(axis='x', rotation=90)
 
     st.pyplot(fig)
 
-    st.success(f"Soal paling berpengaruh: {coef.abs().idxmax()}")
+    st.success(
+        f"Soal paling berpengaruh: {coef.abs().idxmax()}"
+    )
 
     col1, col2 = st.columns(2)
     col1.button("⬅ Previous", on_click=prev_page)
@@ -182,9 +188,15 @@ elif st.session_state.page == 4:
     jumlah_cluster = st.slider("Jumlah Cluster", 2, 5, 3)
 
     scaler = StandardScaler()
-    X_scaled = scaler.fit_transform(indikator.fillna(indikator.mean()))
+    X_scaled = scaler.fit_transform(
+        indikator.fillna(indikator.mean())
+    )
 
-    kmeans = KMeans(n_clusters=jumlah_cluster, random_state=42, n_init=10)
+    kmeans = KMeans(
+        n_clusters=jumlah_cluster,
+        random_state=42,
+        n_init=10
+    )
     cluster_label = kmeans.fit_predict(X_scaled)
 
     indikator_cluster = indikator.copy()
@@ -193,7 +205,9 @@ elif st.session_state.page == 4:
     cluster_mean = indikator_cluster.groupby("Cluster").mean()
 
     labels = indikator.columns.tolist()
-    angles = np.linspace(0, 2*np.pi, len(labels), endpoint=False).tolist()
+    angles = np.linspace(
+        0, 2*np.pi, len(labels), endpoint=False
+    ).tolist()
     angles += angles[:1]
 
     fig = plt.figure(figsize=(6,6))
@@ -212,4 +226,7 @@ elif st.session_state.page == 4:
 
     col1, col2 = st.columns(2)
     col1.button("⬅ Previous", on_click=prev_page)
-    col2.button("Kembali ke Awal", on_click=lambda: st.session_state.update(page=0))
+    col2.button(
+        "Kembali ke Awal",
+        on_click=lambda: st.session_state.update(page=0)
+    )
