@@ -29,9 +29,7 @@ h1, h2, h3 { color: #880e4f; }
 </style>
 """, unsafe_allow_html=True)
 
-# ==========================================================
 # IDENTITAS
-# ==========================================================
 st.markdown(
     "<p style='text-align:left; font-weight:500; color:#6a1b9a;'>"
     "Desta Saputri<br>NIM: 06111282429040"
@@ -74,7 +72,6 @@ if st.session_state.page == 0:
     skor_tertinggi = total_nilai.max()
     skor_terendah = total_nilai.min()
 
-    # KPI STYLE
     st.markdown("""
     <style>
     .kpi-container {
@@ -136,7 +133,7 @@ if st.session_state.page == 0:
     st.button("Next ➝", on_click=next_page)
 
 # ==========================================================
-# PAGE 1 – RATA-RATA SOAL
+# PAGE 1 – RATA-RATA SOAL (PINK BERAGAM)
 # ==========================================================
 elif st.session_state.page == 1:
 
@@ -144,15 +141,25 @@ elif st.session_state.page == 1:
 
     mean_scores = indikator.mean()
 
+    pink_colors = [
+        "#f8bbd0", "#f48fb1", "#f06292", "#ec407a",
+        "#e91e63", "#d81b60", "#c2185b", "#ad1457",
+        "#880e4f", "#ff80ab", "#ff4081", "#ff1a75",
+        "#ff66a3", "#ff3385", "#ff99cc", "#ff4da6",
+        "#ffb3d9", "#ff6699", "#ff0066", "#ff5c8a"
+    ]
+
     fig1, ax1 = plt.subplots(figsize=(8,3))
-    ax1.bar(mean_scores.index, mean_scores.values)
+    ax1.bar(mean_scores.index, mean_scores.values,
+            color=pink_colors[:len(mean_scores)])
     ax1.tick_params(axis='x', rotation=90)
     st.pyplot(fig1)
 
     soal_detail = st.selectbox("Pilih Soal:", mean_scores.index)
+    warna_detail = pink_colors[list(mean_scores.index).index(soal_detail)]
 
     fig2, ax2 = plt.subplots(figsize=(5,3))
-    ax2.bar(soal_detail, mean_scores[soal_detail])
+    ax2.bar(soal_detail, mean_scores[soal_detail], color=warna_detail)
     ax2.set_ylim(0, indikator.max().max())
     st.pyplot(fig2)
 
@@ -177,14 +184,6 @@ elif st.session_state.page == 2:
     ax.set_xticklabels(corr.columns, rotation=90)
     ax.set_yticklabels(corr.columns)
     st.pyplot(fig)
-
-    soal_korelasi = st.selectbox("Pilih Soal:", corr.columns)
-
-    fig2, ax2 = plt.subplots(figsize=(8,3))
-    ax2.bar(corr.columns, corr[soal_korelasi])
-    ax2.axhline(0, linestyle="--")
-    ax2.tick_params(axis='x', rotation=90)
-    st.pyplot(fig2)
 
     col1, col2 = st.columns(2)
     col1.button("⬅ Previous", on_click=prev_page)
@@ -211,13 +210,6 @@ elif st.session_state.page == 3:
     ax1.axhline(0, linestyle="--")
     ax1.tick_params(axis='x', rotation=90)
     st.pyplot(fig1)
-
-    soal_detail = st.selectbox("Pilih Variabel:", coef.index)
-
-    fig2, ax2 = plt.subplots(figsize=(5,3))
-    ax2.bar(soal_detail, coef[soal_detail])
-    ax2.axhline(0, linestyle="--")
-    st.pyplot(fig2)
 
     st.success(f"Soal paling berpengaruh: {coef.abs().idxmax()}")
 
