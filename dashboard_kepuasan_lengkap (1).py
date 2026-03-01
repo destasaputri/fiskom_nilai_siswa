@@ -13,8 +13,18 @@ st.set_page_config(page_title="Dashboard Analisis Hasil Siswa", layout="wide")
 
 st.markdown("""
 <style>
-html, body, .stApp { background-color: #ffd9ec; }
-h1, h2, h3 { color: #880e4f; }
+
+/* Background */
+html, body, .stApp { 
+    background-color: #ffd9ec; 
+}
+
+/* Judul */
+h1, h2, h3 { 
+    color: #880e4f; 
+}
+
+/* Tombol */
 .stButton>button {
     background-color: #d81b60;
     color: white;
@@ -23,6 +33,26 @@ h1, h2, h3 { color: #880e4f; }
 .stButton>button:hover {
     background-color: #ad1457;
 }
+
+/* KPI jadi pink */
+div[data-testid="metric-container"] {
+    background-color: #ffe6f2;
+    border: 2px solid #f06292;
+    padding: 15px;
+    border-radius: 12px;
+    box-shadow: 0px 3px 8px rgba(0,0,0,0.05);
+}
+
+div[data-testid="metric-container"] label {
+    color: #ad1457 !important;
+    font-weight: 600;
+}
+
+div[data-testid="metric-container"] div {
+    color: #880e4f !important;
+    font-weight: bold;
+}
+
 </style>
 """, unsafe_allow_html=True)
 
@@ -35,7 +65,7 @@ st.divider()
 df = pd.read_excel("data_simulasi_50_siswa_20_soal.xlsx")
 indikator = df.apply(pd.to_numeric, errors="coerce")
 
-# PALETTE PINK (KONSISTEN)
+# PALETTE PINK
 pink_colors = [
     "#f8bbd0", "#f48fb1", "#f06292", "#ec407a",
     "#e91e63", "#d81b60", "#c2185b", "#ad1457",
@@ -88,14 +118,12 @@ elif st.session_state.page == 1:
 
     mean_scores = indikator.mean()
 
-    # Grafik semua soal
     fig1, ax1 = plt.subplots(figsize=(8,3))
     ax1.bar(mean_scores.index, mean_scores.values,
             color=pink_colors[:len(mean_scores)])
     ax1.tick_params(axis='x', rotation=90)
     st.pyplot(fig1)
 
-    # Grafik detail
     soal_detail = st.selectbox("Pilih Soal:", indikator.columns)
     warna = pink_colors[list(indikator.columns).index(soal_detail)]
 
@@ -151,14 +179,12 @@ elif st.session_state.page == 3:
         for col in coef.index
     ]
 
-    # Grafik semua koefisien
     fig1, ax1 = plt.subplots(figsize=(9,3))
     ax1.bar(coef.index, coef.values, color=warna_bar)
     ax1.axhline(0, linestyle="--")
     ax1.tick_params(axis='x', rotation=90)
     st.pyplot(fig1)
 
-    # Detail per soal
     soal_detail = st.selectbox("Detail Soal:", coef.index)
     warna_detail = pink_colors[
         list(indikator.columns).index(soal_detail)
