@@ -11,6 +11,9 @@ from sklearn.preprocessing import StandardScaler
 # ==========================================================
 st.set_page_config(page_title="Dashboard Analisis Hasil Siswa", layout="wide")
 
+# ==========================================================
+# STYLE & IDENTITAS
+# ==========================================================
 st.markdown("""
 <style>
 
@@ -19,20 +22,12 @@ html, body, .stApp {
     background-color: #ffd9ec; 
 }
 
-/* IDENTITAS POJOK KIRI ATAS */
-#identitas {
-    position: fixed;
-    top: 10px;
-    left: 20px;
+/* Identitas */
+.identitas-box {
     font-size: 14px;
     font-weight: 600;
     color: #880e4f;
-    z-index: 999;
-}
-
-/* Jarak agar tidak menimpa judul */
-.block-container {
-    padding-top: 80px;
+    margin-bottom: -30px;
 }
 
 /* Judul */
@@ -70,12 +65,16 @@ div[data-testid="metric-container"] div {
 }
 
 </style>
-
-<div id="identitas">
-Desta Saputri<br>
-NIM: 06111282429040
-</div>
 """, unsafe_allow_html=True)
+
+# IDENTITAS (PASTI MUNCUL)
+st.markdown(
+    "<div class='identitas-box'>"
+    "Desta Saputri<br>"
+    "NIM: 06111282429040"
+    "</div>",
+    unsafe_allow_html=True
+)
 
 st.title("🌸 Dashboard Analisis Hasil Siswa")
 st.divider()
@@ -134,7 +133,6 @@ if st.session_state.page == 0:
     ax.set_xlabel("Total Nilai")
     ax.set_ylabel("Frekuensi")
     ax.set_title("Distribusi Total Nilai Siswa")
-
     st.pyplot(fig)
 
     st.button("Next ➝", on_click=next_page)
@@ -181,7 +179,6 @@ elif st.session_state.page == 2:
     ax.set_yticks(range(len(corr.columns)))
     ax.set_xticklabels(corr.columns, rotation=90)
     ax.set_yticklabels(corr.columns)
-
     st.pyplot(fig)
 
     col1, col2 = st.columns(2)
@@ -197,7 +194,6 @@ elif st.session_state.page == 3:
     st.subheader("Pengaruh Setiap Soal terhadap Total Nilai")
 
     total_nilai = indikator.sum(axis=1)
-
     X = sm.add_constant(indikator)
     y = total_nilai
 
@@ -226,7 +222,6 @@ elif st.session_state.page == 3:
     st.pyplot(fig2)
 
     arah = "positif" if coef[soal_detail] > 0 else "negatif"
-
     st.info(f"Koefisien {soal_detail} = {coef[soal_detail]:.3f} ({arah})")
     st.success(f"Soal paling berkontribusi: {coef.abs().idxmax()}")
     st.write(f"R² Model: {model.rsquared:.3f}")
@@ -269,7 +264,6 @@ elif st.session_state.page == 4:
 
     ax.set_thetagrids(np.degrees(angles[:-1]), labels)
     ax.legend(loc="upper right")
-
     st.pyplot(fig)
 
     col1, col2 = st.columns(2)
