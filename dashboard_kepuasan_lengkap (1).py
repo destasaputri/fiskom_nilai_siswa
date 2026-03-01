@@ -19,6 +19,22 @@ html, body, .stApp {
     background-color: #ffd9ec; 
 }
 
+/* IDENTITAS POJOK KIRI ATAS */
+#identitas {
+    position: fixed;
+    top: 10px;
+    left: 20px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #880e4f;
+    z-index: 999;
+}
+
+/* Jarak agar tidak menimpa judul */
+.block-container {
+    padding-top: 80px;
+}
+
 /* Judul */
 h1, h2, h3 { 
     color: #880e4f; 
@@ -54,6 +70,11 @@ div[data-testid="metric-container"] div {
 }
 
 </style>
+
+<div id="identitas">
+Desta Saputri<br>
+NIM: 06111282429040
+</div>
 """, unsafe_allow_html=True)
 
 st.title("🌸 Dashboard Analisis Hasil Siswa")
