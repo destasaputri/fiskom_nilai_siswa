@@ -12,18 +12,12 @@ from sklearn.preprocessing import StandardScaler
 st.set_page_config(page_title="Dashboard Analisis Hasil Siswa", layout="wide")
 
 # ==========================================================
-# SOFT PINK THEME
+# SOFT PINK BACKGROUND
 # ==========================================================
 st.markdown("""
 <style>
 html, body, .stApp { background-color: #ffd9ec; }
-.main { background-color: #ffc2e0; }
 h1, h2, h3 { color: #880e4f; }
-div[data-testid="metric-container"] {
-    background-color: #ffe6f2;
-    border-radius: 12px;
-    padding: 15px;
-}
 .stButton>button {
     background-color: #d81b60;
     color: white;
@@ -31,7 +25,6 @@ div[data-testid="metric-container"] {
 }
 .stButton>button:hover {
     background-color: #ad1457;
-    color: white;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -70,11 +63,9 @@ def prev_page():
         st.session_state.page -= 1
 
 # ==========================================================
-# PAGE 0 – KPI + GRAFIK KECIL
+# PAGE 0 – KPI MODERN STYLE
 # ==========================================================
 if st.session_state.page == 0:
-
-    st.header("Ringkasan Performa Siswa")
 
     total_nilai = indikator.sum(axis=1)
 
@@ -83,13 +74,55 @@ if st.session_state.page == 0:
     skor_tertinggi = total_nilai.max()
     skor_terendah = total_nilai.min()
 
-    col1, col2, col3, col4 = st.columns(4)
-    col1.metric("Jumlah Siswa", jumlah_siswa)
-    col2.metric("Rata-rata Kelas", f"{rata_kelas:.2f}")
-    col3.metric("Skor Tertinggi", f"{skor_tertinggi:.0f}")
-    col4.metric("Skor Terendah", f"{skor_terendah:.0f}")
+    st.markdown("""
+    <style>
+    .kpi-container {
+        display: flex;
+        justify-content: space-between;
+        gap: 20px;
+        margin-bottom: 20px;
+    }
+    .kpi-box {
+        background-color: #ffffff;
+        padding: 25px;
+        border-radius: 12px;
+        text-align: center;
+        width: 100%;
+        box-shadow: 0px 2px 8px rgba(0,0,0,0.05);
+    }
+    .kpi-title {
+        font-size: 16px;
+        color: #555;
+        margin-bottom: 10px;
+    }
+    .kpi-value {
+        font-size: 42px;
+        font-weight: bold;
+        color: #333;
+    }
+    </style>
+    """, unsafe_allow_html=True)
 
-    st.divider()
+    st.markdown(f"""
+    <div class="kpi-container">
+        <div class="kpi-box">
+            <div class="kpi-title">👥 Total Partisipan</div>
+            <div class="kpi-value">{jumlah_siswa} Siswa</div>
+        </div>
+        <div class="kpi-box">
+            <div class="kpi-title">📊 Rata-rata Kelas</div>
+            <div class="kpi-value">{rata_kelas:.1f}</div>
+        </div>
+        <div class="kpi-box">
+            <div class="kpi-title">🏆 Skor Tertinggi</div>
+            <div class="kpi-value">{skor_tertinggi:.0f}</div>
+        </div>
+        <div class="kpi-box">
+            <div class="kpi-title">⚠ Skor Terendah</div>
+            <div class="kpi-value">{skor_terendah:.0f}</div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
 
     st.subheader("Distribusi Total Nilai")
 
@@ -102,7 +135,7 @@ if st.session_state.page == 0:
     st.button("Next ➝", on_click=next_page)
 
 # ==========================================================
-# PAGE 1 – RATA-RATA SOAL (2 GRAFIK)
+# PAGE 1 – RATA-RATA SOAL
 # ==========================================================
 elif st.session_state.page == 1:
 
@@ -129,7 +162,7 @@ elif st.session_state.page == 1:
     col2.button("Next ➝", on_click=next_page)
 
 # ==========================================================
-# PAGE 2 – KORELASI (2 GRAFIK)
+# PAGE 2 – KORELASI
 # ==========================================================
 elif st.session_state.page == 2:
 
@@ -137,7 +170,7 @@ elif st.session_state.page == 2:
 
     corr = indikator.corr()
 
-    st.subheader("Grafik 1 – Heatmap Keseluruhan")
+    st.subheader("Heatmap Keseluruhan")
     fig, ax = plt.subplots(figsize=(6,5))
     im = ax.imshow(corr, cmap="RdPu", vmin=-1, vmax=1)
     plt.colorbar(im, ax=ax)
@@ -147,7 +180,7 @@ elif st.session_state.page == 2:
     ax.set_yticklabels(corr.columns)
     st.pyplot(fig)
 
-    st.subheader("Grafik 2 – Detail Korelasi Soal")
+    st.subheader("Detail Korelasi Soal")
     soal_korelasi = st.selectbox("Pilih Soal:", corr.columns)
 
     fig2, ax2 = plt.subplots(figsize=(8,3))
@@ -161,7 +194,7 @@ elif st.session_state.page == 2:
     col2.button("Next ➝", on_click=next_page)
 
 # ==========================================================
-# PAGE 3 – REGRESI (2 GRAFIK)
+# PAGE 3 – REGRESI
 # ==========================================================
 elif st.session_state.page == 3:
 
@@ -176,14 +209,14 @@ elif st.session_state.page == 3:
     model = sm.OLS(y, X, missing="drop").fit()
     coef = model.params[1:]
 
-    st.subheader("Grafik 1 – Semua Koefisien")
+    st.subheader("Semua Koefisien")
     fig1, ax1 = plt.subplots(figsize=(8,3))
     ax1.bar(coef.index, coef.values)
     ax1.axhline(0, linestyle="--")
     ax1.tick_params(axis='x', rotation=90)
     st.pyplot(fig1)
 
-    st.subheader("Grafik 2 – Detail Koefisien")
+    st.subheader("Detail Koefisien")
     soal_detail = st.selectbox("Pilih Variabel:", coef.index)
 
     fig2, ax2 = plt.subplots(figsize=(5,3))
