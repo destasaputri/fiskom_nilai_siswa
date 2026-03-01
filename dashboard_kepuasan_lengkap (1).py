@@ -9,27 +9,45 @@ from sklearn.preprocessing import StandardScaler
 # ==========================================================
 # KONFIGURASI HALAMAN
 # ==========================================================
-st.set_page_config(page_title="Dashboard Analisis Hasil Siswa", layout="wide")
+st.set_page_config(page_title="Pink Dashboard", layout="wide")
 
 # ==========================================================
-# 🌸 CUSTOM CSS GIRLY THEME
+# 🎀 FULL PINK THEME
 # ==========================================================
 st.markdown("""
 <style>
+html, body, [class*="css"]  {
+    background-color: #ffe6f2;
+}
+
 .main {
-    background: linear-gradient(to right, #ffe6f2, #fff0f5);
+    background: linear-gradient(to bottom right, #ffd6ec, #fff0f8);
 }
+
 h1, h2, h3 {
-    color: #d63384;
+    color: #cc0066;
+    text-align: center;
 }
+
 div[data-testid="metric-container"] {
     background-color: #fff0f6;
     border: 2px solid #ff99cc;
     padding: 15px;
-    border-radius: 15px;
+    border-radius: 20px;
 }
-section[data-testid="stSidebar"] {
-    background-color: #ffe6f2;
+
+.stButton>button {
+    background-color: #ff66b2;
+    color: white;
+    border-radius: 20px;
+    height: 3em;
+    width: 100%;
+    font-size: 16px;
+}
+
+.stButton>button:hover {
+    background-color: #ff3385;
+    color: white;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -37,27 +55,9 @@ section[data-testid="stSidebar"] {
 # ==========================================================
 # HEADER
 # ==========================================================
-st.title("🌸📊 Dashboard Analisis Hasil Siswa 🌸")
-st.markdown("### 💖 Analisis Performa Akademik Berbasis Data 💖")
-st.markdown("**Nama:** Desta Saputri  \n**NIM:** 06111282429040")
-
-st.divider()
-
-# ==========================================================
-# SIDEBAR INTERAKTIF
-# ==========================================================
-st.sidebar.title("🎀 Pengaturan Dashboard")
-
-jumlah_cluster = st.sidebar.slider("Jumlah Cluster", 2, 5, 3)
-
-target_soal = st.sidebar.selectbox(
-    "Pilih Soal untuk Analisis Regresi",
-    options=list(range(1, 21)),
-    index=19
-)
-
-st.sidebar.markdown("🌷 Girly Pink Theme Activated")
-st.sidebar.markdown("💗 Powered by Streamlit")
+st.title("🌸 Dashboard Analisis Hasil Siswa 🌸")
+st.markdown("### 💖 Desta Saputri 💖")
+st.markdown("NIM: 06111282429040")
 
 # ==========================================================
 # LOAD DATA
@@ -66,163 +66,137 @@ df = pd.read_excel("data_simulasi_50_siswa_20_soal.xlsx")
 indikator = df.apply(pd.to_numeric, errors="coerce")
 
 # ==========================================================
-# KPI PERFORMA
+# NAVIGASI SLIDE
 # ==========================================================
-mean_scores = indikator.mean()
-nilai_rata2_kelas = indikator.mean(axis=1).mean()
+if "page" not in st.session_state:
+    st.session_state.page = 0
 
-def kategori_nilai(x):
-    if x >= 85: return "Sangat Baik 💎"
-    elif x >= 75: return "Baik 🌷"
-    elif x >= 65: return "Cukup 🌸"
-    else: return "Perlu Bimbingan 💔"
+def next_page():
+    st.session_state.page += 1
 
-col1, col2, col3 = st.columns(3)
-col1.metric("📈 Rata-rata Kelas", f"{nilai_rata2_kelas:.2f}")
-col2.metric("🏷️ Kategori", kategori_nilai(nilai_rata2_kelas))
-col3.metric("👩‍🎓 Jumlah Siswa", len(df))
-
-st.divider()
+def prev_page():
+    st.session_state.page -= 1
 
 # ==========================================================
-# 🌺 RATA-RATA PER SOAL
+# PAGE 0 – KPI
 # ==========================================================
-st.header("🌺 Rata-rata Nilai per Soal")
+if st.session_state.page == 0:
+    st.header("💗 Ringkasan Performa Kelas")
 
-fig_soal, ax_soal = plt.subplots(figsize=(10,4))
-bars = ax_soal.bar(mean_scores.index, mean_scores.values, color="#ff66b2")
-ax_soal.set_ylabel("Rata-rata Nilai")
-ax_soal.set_title("Distribusi Rata-rata Tiap Soal")
-ax_soal.tick_params(axis='x', rotation=90)
+    mean_scores = indikator.mean()
+    nilai_rata2_kelas = indikator.mean(axis=1).mean()
 
-st.pyplot(fig_soal)
+    col1, col2 = st.columns(2)
+    col1.metric("📈 Rata-rata Kelas", f"{nilai_rata2_kelas:.2f}")
+    col2.metric("👩‍🎓 Jumlah Siswa", len(df))
 
-soal_terendah = mean_scores.idxmin()
-st.info(f"💡 Soal paling menantang adalah **{soal_terendah}**")
-
-st.divider()
+    st.button("Next ➝", on_click=next_page)
 
 # ==========================================================
-# 🌸 KORELASI
+# PAGE 1 – RATA-RATA PER SOAL
 # ==========================================================
-st.header("🌸 Korelasi Antar Soal")
+elif st.session_state.page == 1:
+    st.header("🌺 Rata-rata Nilai per Soal")
 
-corr = indikator.corr()
+    mean_scores = indikator.mean()
 
-fig_corr, ax_corr = plt.subplots(figsize=(7,6))
-im = ax_corr.imshow(corr, cmap="RdPu", vmin=-1, vmax=1)
-plt.colorbar(im, ax=ax_corr)
+    fig, ax = plt.subplots(figsize=(10,4))
+    ax.bar(mean_scores.index, mean_scores.values, color="#ff66b2")
+    ax.set_ylabel("Rata-rata")
+    ax.tick_params(axis='x', rotation=90)
 
-ax_corr.set_xticks(range(len(corr.columns)))
-ax_corr.set_yticks(range(len(corr.columns)))
-ax_corr.set_xticklabels(corr.columns, rotation=90)
-ax_corr.set_yticklabels(corr.columns)
+    st.pyplot(fig)
 
-st.pyplot(fig_corr)
-
-st.divider()
-
-# ==========================================================
-# 🌷 ANALISIS REGRESI INTERAKTIF ESTETIK
-# ==========================================================
-st.header("🌷 Analisis Regresi Interaktif")
-
-st.markdown("""
-Analisis ini menunjukkan **soal mana yang paling memengaruhi**
-soal yang kamu pilih.  
-Semakin tinggi batang grafik 💗 → semakin besar pengaruhnya.
-""")
-
-target_index = target_soal - 1
-
-X = sm.add_constant(indikator.drop(indikator.columns[target_index], axis=1))
-y = indikator.iloc[:, target_index]
-
-model = sm.OLS(y, X, missing="drop").fit()
-coef = model.params[1:]
-r2 = model.rsquared
-
-# Slider filter pengaruh
-threshold = st.slider(
-    "🌸 Tampilkan soal dengan pengaruh minimum:",
-    0.0,
-    float(abs(coef).max()),
-    0.5
-)
-
-coef_filtered = coef[abs(coef) >= threshold]
-
-fig_reg, ax_reg = plt.subplots(figsize=(10,5))
-
-bars = ax_reg.bar(coef_filtered.index, coef_filtered.values)
-
-for bar in bars:
-    if bar.get_height() > 0:
-        bar.set_color("#ff66b2")
-    else:
-        bar.set_color("#ffb3d9")
-
-ax_reg.axhline(0, linestyle="--")
-ax_reg.set_title(f"Pengaruh Soal terhadap Soal {target_soal} 💖")
-ax_reg.set_ylabel("Besarnya Pengaruh")
-ax_reg.tick_params(axis='x', rotation=90)
-
-st.pyplot(fig_reg)
-
-soal_dominan = coef.abs().idxmax()
-nilai_dominan = coef.abs().max()
-
-st.success(
-    f"💎 Soal paling berpengaruh terhadap Soal {target_soal} adalah "
-    f"**{soal_dominan}** dengan kekuatan {nilai_dominan:.2f}"
-)
-
-st.info(f"📊 Model menjelaskan sekitar **{r2*100:.1f}%** variasi nilai")
-
-st.markdown("### 🌸 Ranking Pengaruh Soal")
-
-ranking = coef.abs().sort_values(ascending=False)
-
-for i, (nama, nilai) in enumerate(ranking.items(), start=1):
-    st.progress(float(nilai / ranking.max()))
-    st.write(f"{i}. {nama} → {nilai:.2f}")
-
-st.divider()
+    col1, col2 = st.columns(2)
+    col1.button("⬅ Previous", on_click=prev_page)
+    col2.button("Next ➝", on_click=next_page)
 
 # ==========================================================
-# 🎀 SEGMENTASI SISWA
+# PAGE 2 – KORELASI
 # ==========================================================
-st.header("🎀 Segmentasi Performa Siswa")
+elif st.session_state.page == 2:
+    st.header("🌸 Korelasi Antar Soal")
 
-scaler = StandardScaler()
-X_scaled = scaler.fit_transform(indikator.fillna(indikator.mean()))
+    corr = indikator.corr()
 
-kmeans = KMeans(n_clusters=jumlah_cluster, random_state=42, n_init=10)
-cluster_label = kmeans.fit_predict(X_scaled)
+    fig, ax = plt.subplots(figsize=(7,6))
+    im = ax.imshow(corr, cmap="RdPu", vmin=-1, vmax=1)
+    plt.colorbar(im, ax=ax)
 
-indikator_cluster = indikator.copy()
-indikator_cluster["Cluster"] = cluster_label
+    ax.set_xticks(range(len(corr.columns)))
+    ax.set_yticks(range(len(corr.columns)))
+    ax.set_xticklabels(corr.columns, rotation=90)
+    ax.set_yticklabels(corr.columns)
 
-cluster_mean = indikator_cluster.groupby("Cluster").mean()
+    st.pyplot(fig)
 
-labels = indikator.columns.tolist()
-angles = np.linspace(0, 2*np.pi, len(labels), endpoint=False).tolist()
-angles += angles[:1]
+    col1, col2 = st.columns(2)
+    col1.button("⬅ Previous", on_click=prev_page)
+    col2.button("Next ➝", on_click=next_page)
 
-fig_rad = plt.figure(figsize=(6,6))
-ax_rad = plt.subplot(polar=True)
+# ==========================================================
+# PAGE 3 – REGRESI
+# ==========================================================
+elif st.session_state.page == 3:
+    st.header("🌷 Analisis Regresi")
 
-for i, row in cluster_mean.iterrows():
-    values = row[labels].tolist()
-    values += values[:1]
-    ax_rad.plot(angles, values, label=f"Cluster {i}")
-    ax_rad.fill(angles, values, alpha=0.2)
+    target_index = 19  # Soal 20
 
-ax_rad.set_thetagrids(np.degrees(angles[:-1]), labels)
-ax_rad.set_ylim(0, indikator.max().max())
-ax_rad.set_title("Radar Segmentasi Siswa 🌸")
-ax_rad.legend(loc="upper right")
+    X = sm.add_constant(indikator.drop(indikator.columns[target_index], axis=1))
+    y = indikator.iloc[:, target_index]
 
-st.pyplot(fig_rad)
+    model = sm.OLS(y, X, missing="drop").fit()
+    coef = model.params[1:]
 
-st.success("🌷 Dashboard Girly Interaktif Siap Digunakan 💗✨")
+    fig, ax = plt.subplots(figsize=(10,4))
+    ax.bar(coef.index, coef.values, color="#ff66b2")
+    ax.axhline(0, linestyle="--")
+    ax.tick_params(axis='x', rotation=90)
+
+    st.pyplot(fig)
+
+    st.success(f"Soal paling berpengaruh: {coef.abs().idxmax()} 💖")
+
+    col1, col2 = st.columns(2)
+    col1.button("⬅ Previous", on_click=prev_page)
+    col2.button("Next ➝", on_click=next_page)
+
+# ==========================================================
+# PAGE 4 – SEGMENTASI
+# ==========================================================
+elif st.session_state.page == 4:
+    st.header("🎀 Segmentasi Siswa")
+
+    scaler = StandardScaler()
+    X_scaled = scaler.fit_transform(indikator.fillna(indikator.mean()))
+
+    kmeans = KMeans(n_clusters=3, random_state=42, n_init=10)
+    cluster_label = kmeans.fit_predict(X_scaled)
+
+    indikator_cluster = indikator.copy()
+    indikator_cluster["Cluster"] = cluster_label
+
+    cluster_mean = indikator_cluster.groupby("Cluster").mean()
+
+    labels = indikator.columns.tolist()
+    angles = np.linspace(0, 2*np.pi, len(labels), endpoint=False).tolist()
+    angles += angles[:1]
+
+    fig = plt.figure(figsize=(6,6))
+    ax = plt.subplot(polar=True)
+
+    for i, row in cluster_mean.iterrows():
+        values = row[labels].tolist()
+        values += values[:1]
+        ax.plot(angles, values, label=f"Cluster {i}")
+        ax.fill(angles, values, alpha=0.2)
+
+    ax.set_thetagrids(np.degrees(angles[:-1]), labels)
+    ax.set_title("Radar Segmentasi 🌸")
+    ax.legend()
+
+    st.pyplot(fig)
+
+    col1, col2 = st.columns(2)
+    col1.button("⬅ Previous", on_click=prev_page)
+    col2.button("🔄 Kembali ke Awal", on_click=lambda: st.session_state.update(page=0))
