@@ -63,7 +63,7 @@ def prev_page():
         st.session_state.page -= 1
 
 # ==========================================================
-# PAGE 0 – KPI MODERN STYLE
+# PAGE 0 – KPI + DISTRIBUSI 50 BIN
 # ==========================================================
 if st.session_state.page == 0:
 
@@ -74,6 +74,7 @@ if st.session_state.page == 0:
     skor_tertinggi = total_nilai.max()
     skor_terendah = total_nilai.min()
 
+    # KPI STYLE
     st.markdown("""
     <style>
     .kpi-container {
@@ -124,12 +125,12 @@ if st.session_state.page == 0:
     </div>
     """, unsafe_allow_html=True)
 
-    st.subheader("Distribusi Total Nilai")
+    st.subheader("Distribusi Total Nilai (50 Siswa)")
 
     fig, ax = plt.subplots(figsize=(5,3))
-    ax.hist(total_nilai, bins=8)
+    ax.hist(total_nilai, bins=len(total_nilai), edgecolor='black')
     ax.set_xlabel("Total Nilai")
-    ax.set_ylabel("Jumlah Siswa")
+    ax.set_ylabel("Frekuensi")
     st.pyplot(fig)
 
     st.button("Next ➝", on_click=next_page)
@@ -143,13 +144,11 @@ elif st.session_state.page == 1:
 
     mean_scores = indikator.mean()
 
-    st.subheader("Grafik 1 – Semua Soal")
     fig1, ax1 = plt.subplots(figsize=(8,3))
     ax1.bar(mean_scores.index, mean_scores.values)
     ax1.tick_params(axis='x', rotation=90)
     st.pyplot(fig1)
 
-    st.subheader("Grafik 2 – Detail Soal")
     soal_detail = st.selectbox("Pilih Soal:", mean_scores.index)
 
     fig2, ax2 = plt.subplots(figsize=(5,3))
@@ -170,7 +169,6 @@ elif st.session_state.page == 2:
 
     corr = indikator.corr()
 
-    st.subheader("Heatmap Keseluruhan")
     fig, ax = plt.subplots(figsize=(6,5))
     im = ax.imshow(corr, cmap="RdPu", vmin=-1, vmax=1)
     plt.colorbar(im, ax=ax)
@@ -180,7 +178,6 @@ elif st.session_state.page == 2:
     ax.set_yticklabels(corr.columns)
     st.pyplot(fig)
 
-    st.subheader("Detail Korelasi Soal")
     soal_korelasi = st.selectbox("Pilih Soal:", corr.columns)
 
     fig2, ax2 = plt.subplots(figsize=(8,3))
@@ -209,14 +206,12 @@ elif st.session_state.page == 3:
     model = sm.OLS(y, X, missing="drop").fit()
     coef = model.params[1:]
 
-    st.subheader("Semua Koefisien")
     fig1, ax1 = plt.subplots(figsize=(8,3))
     ax1.bar(coef.index, coef.values)
     ax1.axhline(0, linestyle="--")
     ax1.tick_params(axis='x', rotation=90)
     st.pyplot(fig1)
 
-    st.subheader("Detail Koefisien")
     soal_detail = st.selectbox("Pilih Variabel:", coef.index)
 
     fig2, ax2 = plt.subplots(figsize=(5,3))
