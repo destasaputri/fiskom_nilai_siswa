@@ -26,14 +26,6 @@ h1, h2, h3 { color: #880e4f; }
 </style>
 """, unsafe_allow_html=True)
 
-# IDENTITAS
-st.markdown(
-    "<p style='text-align:left; font-weight:500; color:#6a1b9a;'>"
-    "Desta Saputri<br>NIM: 06111282429040"
-    "</p>",
-    unsafe_allow_html=True
-)
-
 st.title("🌸 Dashboard Analisis Hasil Siswa")
 st.divider()
 
@@ -43,7 +35,7 @@ st.divider()
 df = pd.read_excel("data_simulasi_50_siswa_20_soal.xlsx")
 indikator = df.apply(pd.to_numeric, errors="coerce")
 
-# PALETTE PINK (KONSISTEN UNTUK SEMUA DIAGRAM SOAL)
+# PALETTE PINK (KONSISTEN)
 pink_colors = [
     "#f8bbd0", "#f48fb1", "#f06292", "#ec407a",
     "#e91e63", "#d81b60", "#c2185b", "#ad1457",
@@ -73,52 +65,16 @@ if st.session_state.page == 0:
 
     total_nilai = indikator.sum(axis=1)
 
-    jumlah_siswa = len(df)
-    rata_kelas = total_nilai.mean()
-    skor_tertinggi = total_nilai.max()
-    skor_terendah = total_nilai.min()
+    col1, col2, col3, col4 = st.columns(4)
+    col1.metric("👥 Total Siswa", len(df))
+    col2.metric("📊 Rata-rata", f"{total_nilai.mean():.1f}")
+    col3.metric("🏆 Tertinggi", f"{total_nilai.max():.0f}")
+    col4.metric("⚠ Terendah", f"{total_nilai.min():.0f}")
 
-    st.markdown("""
-    <style>
-    .kpi-container {display:flex; gap:20px; margin-bottom:20px;}
-    .kpi-box {
-        background-color:#ffffff;
-        padding:25px;
-        border-radius:12px;
-        text-align:center;
-        width:100%;
-        box-shadow:0px 2px 8px rgba(0,0,0,0.05);
-    }
-    .kpi-title {font-size:16px; color:#555;}
-    .kpi-value {font-size:42px; font-weight:bold;}
-    </style>
-    """, unsafe_allow_html=True)
+    st.subheader("Distribusi Total Nilai (50 Bin)")
 
-    st.markdown(f"""
-    <div class="kpi-container">
-        <div class="kpi-box">
-            <div class="kpi-title">👥 Total Partisipan</div>
-            <div class="kpi-value">{jumlah_siswa}</div>
-        </div>
-        <div class="kpi-box">
-            <div class="kpi-title">📊 Rata-rata Kelas</div>
-            <div class="kpi-value">{rata_kelas:.1f}</div>
-        </div>
-        <div class="kpi-box">
-            <div class="kpi-title">🏆 Skor Tertinggi</div>
-            <div class="kpi-value">{skor_tertinggi:.0f}</div>
-        </div>
-        <div class="kpi-box">
-            <div class="kpi-title">⚠ Skor Terendah</div>
-            <div class="kpi-value">{skor_terendah:.0f}</div>
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
-
-    st.subheader("Distribusi Total Nilai (50 Siswa)")
-
-    fig, ax = plt.subplots(figsize=(5,3))
-    ax.hist(total_nilai, bins=len(total_nilai), edgecolor='black')
+    fig, ax = plt.subplots(figsize=(6,3))
+    ax.hist(total_nilai, bins=50, edgecolor='black')
     st.pyplot(fig)
 
     st.button("Next ➝", on_click=next_page)
@@ -132,12 +88,14 @@ elif st.session_state.page == 1:
 
     mean_scores = indikator.mean()
 
+    # Grafik semua soal
     fig1, ax1 = plt.subplots(figsize=(8,3))
     ax1.bar(mean_scores.index, mean_scores.values,
             color=pink_colors[:len(mean_scores)])
     ax1.tick_params(axis='x', rotation=90)
     st.pyplot(fig1)
 
+    # Grafik detail
     soal_detail = st.selectbox("Pilih Soal:", indikator.columns)
     warna = pink_colors[list(indikator.columns).index(soal_detail)]
 
@@ -165,6 +123,7 @@ elif st.session_state.page == 2:
     ax.set_yticks(range(len(corr.columns)))
     ax.set_xticklabels(corr.columns, rotation=90)
     ax.set_yticklabels(corr.columns)
+
     st.pyplot(fig)
 
     col1, col2 = st.columns(2)
@@ -172,19 +131,17 @@ elif st.session_state.page == 2:
     col2.button("Next ➝", on_click=next_page)
 
 # ==========================================================
-# PAGE 3 – REGRESI LENGKAP
+# PAGE 3 – REGRESI TOTAL NILAI
 # ==========================================================
 elif st.session_state.page == 3:
 
-    st.header("Analisis Regresi Interaktif")
+    st.header("Analisis Regresi")
+    st.subheader("Pengaruh Setiap Soal terhadap Total Nilai")
 
-    target_soal = st.selectbox(
-        "Pilih Soal Target (Variabel Dependen):",
-        indikator.columns
-    )
+    total_nilai = indikator.sum(axis=1)
 
-    X = sm.add_constant(indikator.drop(columns=[target_soal]))
-    y = indikator[target_soal]
+    X = sm.add_constant(indikator)
+    y = total_nilai
 
     model = sm.OLS(y, X, missing="drop").fit()
     coef = model.params.drop("const")
@@ -194,13 +151,15 @@ elif st.session_state.page == 3:
         for col in coef.index
     ]
 
+    # Grafik semua koefisien
     fig1, ax1 = plt.subplots(figsize=(9,3))
     ax1.bar(coef.index, coef.values, color=warna_bar)
     ax1.axhline(0, linestyle="--")
     ax1.tick_params(axis='x', rotation=90)
     st.pyplot(fig1)
 
-    soal_detail = st.selectbox("Pilih Soal Prediktor:", coef.index)
+    # Detail per soal
+    soal_detail = st.selectbox("Detail Soal:", coef.index)
     warna_detail = pink_colors[
         list(indikator.columns).index(soal_detail)
     ]
@@ -210,10 +169,17 @@ elif st.session_state.page == 3:
     ax2.axhline(0, linestyle="--")
     st.pyplot(fig2)
 
-    st.success(
-        f"Soal paling berpengaruh terhadap {target_soal}: "
-        f"{coef.abs().idxmax()}"
+    arah = "positif" if coef[soal_detail] > 0 else "negatif"
+
+    st.info(
+        f"Koefisien {soal_detail} = {coef[soal_detail]:.3f} ({arah})"
     )
+
+    st.success(
+        f"Soal paling berkontribusi: {coef.abs().idxmax()}"
+    )
+
+    st.write(f"R² Model: {model.rsquared:.3f}")
 
     col1, col2 = st.columns(2)
     col1.button("⬅ Previous", on_click=prev_page)
@@ -224,7 +190,7 @@ elif st.session_state.page == 3:
 # ==========================================================
 elif st.session_state.page == 4:
 
-    st.header("Segmentasi Performa")
+    st.header("Segmentasi Performa Siswa")
 
     jumlah_cluster = st.slider("Jumlah Cluster", 2, 5, 3)
 
@@ -253,6 +219,7 @@ elif st.session_state.page == 4:
 
     ax.set_thetagrids(np.degrees(angles[:-1]), labels)
     ax.legend(loc="upper right")
+
     st.pyplot(fig)
 
     col1, col2 = st.columns(2)
