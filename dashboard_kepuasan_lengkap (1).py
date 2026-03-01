@@ -34,7 +34,7 @@ h1, h2, h3 {
     background-color: #ad1457;
 }
 
-/* KPI jadi pink */
+/* KPI Pink */
 div[data-testid="metric-container"] {
     background-color: #ffe6f2;
     border: 2px solid #f06292;
@@ -65,7 +65,6 @@ st.divider()
 df = pd.read_excel("data_simulasi_50_siswa_20_soal.xlsx")
 indikator = df.apply(pd.to_numeric, errors="coerce")
 
-# PALETTE PINK
 pink_colors = [
     "#f8bbd0", "#f48fb1", "#f06292", "#ec407a",
     "#e91e63", "#d81b60", "#c2185b", "#ad1457",
@@ -104,7 +103,17 @@ if st.session_state.page == 0:
     st.subheader("Distribusi Total Nilai (50 Bin)")
 
     fig, ax = plt.subplots(figsize=(6,3))
-    ax.hist(total_nilai, bins=50, edgecolor='black')
+    ax.hist(
+        total_nilai,
+        bins=50,
+        color="#f06292",
+        edgecolor="#880e4f",
+        alpha=0.85
+    )
+    ax.set_xlabel("Total Nilai")
+    ax.set_ylabel("Frekuensi")
+    ax.set_title("Distribusi Total Nilai Siswa")
+
     st.pyplot(fig)
 
     st.button("Next ➝", on_click=next_page)
@@ -197,14 +206,8 @@ elif st.session_state.page == 3:
 
     arah = "positif" if coef[soal_detail] > 0 else "negatif"
 
-    st.info(
-        f"Koefisien {soal_detail} = {coef[soal_detail]:.3f} ({arah})"
-    )
-
-    st.success(
-        f"Soal paling berkontribusi: {coef.abs().idxmax()}"
-    )
-
+    st.info(f"Koefisien {soal_detail} = {coef[soal_detail]:.3f} ({arah})")
+    st.success(f"Soal paling berkontribusi: {coef.abs().idxmax()}")
     st.write(f"R² Model: {model.rsquared:.3f}")
 
     col1, col2 = st.columns(2)
