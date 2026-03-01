@@ -12,7 +12,7 @@ from sklearn.preprocessing import StandardScaler
 st.set_page_config(page_title="Dashboard Analisis Hasil Siswa", layout="wide")
 
 # ==========================================================
-# CUSTOM CSS GIRLY THEME
+# 🌸 CUSTOM CSS GIRLY THEME
 # ==========================================================
 st.markdown("""
 <style>
@@ -28,7 +28,7 @@ div[data-testid="metric-container"] {
     padding: 15px;
     border-radius: 15px;
 }
-.sidebar .sidebar-content {
+section[data-testid="stSidebar"] {
     background-color: #ffe6f2;
 }
 </style>
@@ -39,14 +39,14 @@ div[data-testid="metric-container"] {
 # ==========================================================
 st.title("🌸📊 Dashboard Analisis Hasil Siswa 🌸")
 st.markdown("### 💖 Analisis Performa Akademik Berbasis Data 💖")
-st.markdown("**Desta Saputri**  \nNIM: 06111282429040")
+st.markdown("**Nama:** Desta Saputri  \n**NIM:** 06111282429040")
 
 st.divider()
 
 # ==========================================================
 # SIDEBAR INTERAKTIF
 # ==========================================================
-st.sidebar.title("🎀 Pengaturan Analisis")
+st.sidebar.title("🎀 Pengaturan Dashboard")
 
 jumlah_cluster = st.sidebar.slider("Jumlah Cluster", 2, 5, 3)
 
@@ -56,8 +56,8 @@ target_soal = st.sidebar.selectbox(
     index=19
 )
 
-st.sidebar.markdown("🌷 Dashboard dibuat dengan Streamlit")
-st.sidebar.markdown("💗 Tema Girly Pink Edition")
+st.sidebar.markdown("🌷 Girly Pink Theme Activated")
+st.sidebar.markdown("💗 Powered by Streamlit")
 
 # ==========================================================
 # LOAD DATA
@@ -85,25 +85,25 @@ col3.metric("👩‍🎓 Jumlah Siswa", len(df))
 st.divider()
 
 # ==========================================================
-# ANALISIS PER SOAL
+# 🌺 RATA-RATA PER SOAL
 # ==========================================================
 st.header("🌺 Rata-rata Nilai per Soal")
 
-fig_soal, ax_soal = plt.subplots(figsize=(9,4))
-ax_soal.bar(mean_scores.index, mean_scores.values)
+fig_soal, ax_soal = plt.subplots(figsize=(10,4))
+bars = ax_soal.bar(mean_scores.index, mean_scores.values, color="#ff66b2")
 ax_soal.set_ylabel("Rata-rata Nilai")
-ax_soal.set_title("Rata-rata Nilai Tiap Soal")
+ax_soal.set_title("Distribusi Rata-rata Tiap Soal")
 ax_soal.tick_params(axis='x', rotation=90)
 
 st.pyplot(fig_soal)
 
 soal_terendah = mean_scores.idxmin()
-st.info(f"💡 Soal paling menantang: **{soal_terendah}**")
+st.info(f"💡 Soal paling menantang adalah **{soal_terendah}**")
 
 st.divider()
 
 # ==========================================================
-# ANALISIS KORELASI
+# 🌸 KORELASI
 # ==========================================================
 st.header("🌸 Korelasi Antar Soal")
 
@@ -123,11 +123,18 @@ st.pyplot(fig_corr)
 st.divider()
 
 # ==========================================================
-# ANALISIS REGRESI (INTERAKTIF)
+# 🌷 ANALISIS REGRESI INTERAKTIF ESTETIK
 # ==========================================================
 st.header("🌷 Analisis Regresi Interaktif")
 
+st.markdown("""
+Analisis ini menunjukkan **soal mana yang paling memengaruhi**
+soal yang kamu pilih.  
+Semakin tinggi batang grafik 💗 → semakin besar pengaruhnya.
+""")
+
 target_index = target_soal - 1
+
 X = sm.add_constant(indikator.drop(indikator.columns[target_index], axis=1))
 y = indikator.iloc[:, target_index]
 
@@ -135,20 +142,55 @@ model = sm.OLS(y, X, missing="drop").fit()
 coef = model.params[1:]
 r2 = model.rsquared
 
-fig_reg, ax_reg = plt.subplots(figsize=(9,4))
-ax_reg.bar(coef.index, coef.values)
+# Slider filter pengaruh
+threshold = st.slider(
+    "🌸 Tampilkan soal dengan pengaruh minimum:",
+    0.0,
+    float(abs(coef).max()),
+    0.5
+)
+
+coef_filtered = coef[abs(coef) >= threshold]
+
+fig_reg, ax_reg = plt.subplots(figsize=(10,5))
+
+bars = ax_reg.bar(coef_filtered.index, coef_filtered.values)
+
+for bar in bars:
+    if bar.get_height() > 0:
+        bar.set_color("#ff66b2")
+    else:
+        bar.set_color("#ffb3d9")
+
 ax_reg.axhline(0, linestyle="--")
-ax_reg.set_title(f"Koefisien Regresi untuk Soal {target_soal}")
+ax_reg.set_title(f"Pengaruh Soal terhadap Soal {target_soal} 💖")
+ax_reg.set_ylabel("Besarnya Pengaruh")
+ax_reg.tick_params(axis='x', rotation=90)
 
 st.pyplot(fig_reg)
 
-st.info(f"📊 Nilai R²: **{r2:.2f}**")
-st.success(f"🌟 Soal paling berpengaruh: **{coef.abs().idxmax()}**")
+soal_dominan = coef.abs().idxmax()
+nilai_dominan = coef.abs().max()
+
+st.success(
+    f"💎 Soal paling berpengaruh terhadap Soal {target_soal} adalah "
+    f"**{soal_dominan}** dengan kekuatan {nilai_dominan:.2f}"
+)
+
+st.info(f"📊 Model menjelaskan sekitar **{r2*100:.1f}%** variasi nilai")
+
+st.markdown("### 🌸 Ranking Pengaruh Soal")
+
+ranking = coef.abs().sort_values(ascending=False)
+
+for i, (nama, nilai) in enumerate(ranking.items(), start=1):
+    st.progress(float(nilai / ranking.max()))
+    st.write(f"{i}. {nama} → {nilai:.2f}")
 
 st.divider()
 
 # ==========================================================
-# SEGMENTASI INTERAKTIF
+# 🎀 SEGMENTASI SISWA
 # ==========================================================
 st.header("🎀 Segmentasi Performa Siswa")
 
@@ -183,4 +225,4 @@ ax_rad.legend(loc="upper right")
 
 st.pyplot(fig_rad)
 
-st.success("🌷 Dashboard Interaktif Girly Siap Digunakan 💗")
+st.success("🌷 Dashboard Girly Interaktif Siap Digunakan 💗✨")
