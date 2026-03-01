@@ -27,7 +27,7 @@ html, body, .stApp {
     font-size: 14px;
     font-weight: 600;
     color: #880e4f;
-    margin-bottom: -30px;
+    margin-bottom: 20px;   /* tambahkan jarak */
 }
 
 /* Judul */
@@ -49,25 +49,15 @@ h1, h2, h3 {
 div[data-testid="metric-container"] {
     background-color: #ffe6f2;
     border: 2px solid #f06292;
-    padding: 15px;
+    padding: 12px;
     border-radius: 12px;
     box-shadow: 0px 3px 8px rgba(0,0,0,0.05);
-}
-
-div[data-testid="metric-container"] label {
-    color: #ad1457 !important;
-    font-weight: 600;
-}
-
-div[data-testid="metric-container"] div {
-    color: #880e4f !important;
-    font-weight: bold;
 }
 
 </style>
 """, unsafe_allow_html=True)
 
-# IDENTITAS (PASTI MUNCUL)
+# IDENTITAS
 st.markdown(
     "<div class='identitas-box'>"
     "Desta Saputri<br>"
@@ -122,17 +112,13 @@ if st.session_state.page == 0:
 
     st.subheader("Distribusi Total Nilai (50 Bin)")
 
-    fig, ax = plt.subplots(figsize=(6,3))
-    ax.hist(
-        total_nilai,
-        bins=50,
-        color="#f06292",
-        edgecolor="#880e4f",
-        alpha=0.85
-    )
+    fig, ax = plt.subplots(figsize=(4,2.5))  # DIPERKECIL
+    ax.hist(total_nilai, bins=50,
+            color="#f06292",
+            edgecolor="#880e4f",
+            alpha=0.85)
     ax.set_xlabel("Total Nilai")
     ax.set_ylabel("Frekuensi")
-    ax.set_title("Distribusi Total Nilai Siswa")
     st.pyplot(fig)
 
     st.button("Next ➝", on_click=next_page)
@@ -146,7 +132,7 @@ elif st.session_state.page == 1:
 
     mean_scores = indikator.mean()
 
-    fig1, ax1 = plt.subplots(figsize=(8,3))
+    fig1, ax1 = plt.subplots(figsize=(6,2.5))  # DIPERKECIL
     ax1.bar(mean_scores.index, mean_scores.values,
             color=pink_colors[:len(mean_scores)])
     ax1.tick_params(axis='x', rotation=90)
@@ -155,7 +141,7 @@ elif st.session_state.page == 1:
     soal_detail = st.selectbox("Pilih Soal:", indikator.columns)
     warna = pink_colors[list(indikator.columns).index(soal_detail)]
 
-    fig2, ax2 = plt.subplots(figsize=(5,3))
+    fig2, ax2 = plt.subplots(figsize=(4,2.5))  # DIPERKECIL
     ax2.bar(soal_detail, mean_scores[soal_detail], color=warna)
     st.pyplot(fig2)
 
@@ -172,7 +158,7 @@ elif st.session_state.page == 2:
 
     corr = indikator.corr()
 
-    fig, ax = plt.subplots(figsize=(6,5))
+    fig, ax = plt.subplots(figsize=(4.5,4))  # DIPERKECIL
     im = ax.imshow(corr, cmap="RdPu", vmin=-1, vmax=1)
     plt.colorbar(im, ax=ax)
     ax.set_xticks(range(len(corr.columns)))
@@ -186,12 +172,11 @@ elif st.session_state.page == 2:
     col2.button("Next ➝", on_click=next_page)
 
 # ==========================================================
-# PAGE 3 – REGRESI TOTAL NILAI
+# PAGE 3 – REGRESI
 # ==========================================================
 elif st.session_state.page == 3:
 
     st.header("Analisis Regresi")
-    st.subheader("Pengaruh Setiap Soal terhadap Total Nilai")
 
     total_nilai = indikator.sum(axis=1)
     X = sm.add_constant(indikator)
@@ -200,30 +185,13 @@ elif st.session_state.page == 3:
     model = sm.OLS(y, X, missing="drop").fit()
     coef = model.params.drop("const")
 
-    warna_bar = [
-        pink_colors[list(indikator.columns).index(col)]
-        for col in coef.index
-    ]
-
-    fig1, ax1 = plt.subplots(figsize=(9,3))
-    ax1.bar(coef.index, coef.values, color=warna_bar)
+    fig1, ax1 = plt.subplots(figsize=(6,2.5))  # DIPERKECIL
+    ax1.bar(coef.index, coef.values,
+            color=pink_colors[:len(coef)])
     ax1.axhline(0, linestyle="--")
     ax1.tick_params(axis='x', rotation=90)
     st.pyplot(fig1)
 
-    soal_detail = st.selectbox("Detail Soal:", coef.index)
-    warna_detail = pink_colors[
-        list(indikator.columns).index(soal_detail)
-    ]
-
-    fig2, ax2 = plt.subplots(figsize=(5,3))
-    ax2.bar(soal_detail, coef[soal_detail], color=warna_detail)
-    ax2.axhline(0, linestyle="--")
-    st.pyplot(fig2)
-
-    arah = "positif" if coef[soal_detail] > 0 else "negatif"
-    st.info(f"Koefisien {soal_detail} = {coef[soal_detail]:.3f} ({arah})")
-    st.success(f"Soal paling berkontribusi: {coef.abs().idxmax()}")
     st.write(f"R² Model: {model.rsquared:.3f}")
 
     col1, col2 = st.columns(2)
@@ -253,7 +221,7 @@ elif st.session_state.page == 4:
     angles = np.linspace(0, 2*np.pi, len(labels), endpoint=False).tolist()
     angles += angles[:1]
 
-    fig = plt.figure(figsize=(5,5))
+    fig = plt.figure(figsize=(4,4))  # DIPERKECIL
     ax = plt.subplot(polar=True)
 
     for i, row in cluster_mean.iterrows():
