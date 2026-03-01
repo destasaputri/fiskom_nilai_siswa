@@ -7,12 +7,12 @@ from sklearn.cluster import KMeans
 from sklearn.preprocessing import StandardScaler
 
 # ==========================================================
-# KONFIGURASI
+# KONFIGURASI HALAMAN
 # ==========================================================
 st.set_page_config(page_title="Dashboard Analisis Hasil Siswa", layout="wide")
 
 # ==========================================================
-# PINK CLEAN THEME
+# SOFT PINK THEME
 # ==========================================================
 st.markdown("""
 <style>
@@ -31,6 +31,7 @@ div[data-testid="metric-container"] {
 }
 .stButton>button:hover {
     background-color: #ad1457;
+    color: white;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -69,49 +70,75 @@ def prev_page():
         st.session_state.page -= 1
 
 # ==========================================================
-# PAGE 0 – RINGKASAN PERFORMA
+# PAGE 0 – KPI + GRAFIK KECIL
 # ==========================================================
 if st.session_state.page == 0:
 
-    st.header("Ringkasan Performa")
+    st.header("Ringkasan Performa Siswa")
 
-    mean_scores = indikator.mean()
-    rata_kelas = indikator.mean(axis=1).mean()
+    total_nilai = indikator.sum(axis=1)
 
-    col1, col2 = st.columns(2)
-    col1.metric("Rata-rata Kelas", f"{rata_kelas:.2f}")
-    col2.metric("Jumlah Siswa", len(df))
+    jumlah_siswa = len(df)
+    rata_kelas = total_nilai.mean()
+    skor_tertinggi = total_nilai.max()
+    skor_terendah = total_nilai.min()
 
-    st.subheader("Grafik 1 – Rata-rata Seluruh Soal")
+    col1, col2, col3, col4 = st.columns(4)
+    col1.metric("Jumlah Siswa", jumlah_siswa)
+    col2.metric("Rata-rata Kelas", f"{rata_kelas:.2f}")
+    col3.metric("Skor Tertinggi", f"{skor_tertinggi:.0f}")
+    col4.metric("Skor Terendah", f"{skor_terendah:.0f}")
 
-    fig1, ax1 = plt.subplots(figsize=(10,4))
-    ax1.bar(mean_scores.index, mean_scores.values, color="#ad1457")
-    ax1.tick_params(axis='x', rotation=90)
-    st.pyplot(fig1)
+    st.divider()
 
-    st.subheader("Grafik 2 – Detail Soal")
+    st.subheader("Distribusi Total Nilai")
 
-    soal_detail = st.selectbox("Pilih soal untuk detail:", mean_scores.index)
-
-    fig2, ax2 = plt.subplots(figsize=(5,4))
-    ax2.bar(soal_detail, mean_scores[soal_detail], color="#6a1b9a")
-    ax2.set_ylim(0, indikator.max().max())
-    st.pyplot(fig2)
+    fig, ax = plt.subplots(figsize=(5,3))
+    ax.hist(total_nilai, bins=8)
+    ax.set_xlabel("Total Nilai")
+    ax.set_ylabel("Jumlah Siswa")
+    st.pyplot(fig)
 
     st.button("Next ➝", on_click=next_page)
 
 # ==========================================================
-# PAGE 1 – KORELASI
+# PAGE 1 – RATA-RATA SOAL (2 GRAFIK)
 # ==========================================================
 elif st.session_state.page == 1:
+
+    st.header("Rata-rata Nilai per Soal")
+
+    mean_scores = indikator.mean()
+
+    st.subheader("Grafik 1 – Semua Soal")
+    fig1, ax1 = plt.subplots(figsize=(8,3))
+    ax1.bar(mean_scores.index, mean_scores.values)
+    ax1.tick_params(axis='x', rotation=90)
+    st.pyplot(fig1)
+
+    st.subheader("Grafik 2 – Detail Soal")
+    soal_detail = st.selectbox("Pilih Soal:", mean_scores.index)
+
+    fig2, ax2 = plt.subplots(figsize=(5,3))
+    ax2.bar(soal_detail, mean_scores[soal_detail])
+    ax2.set_ylim(0, indikator.max().max())
+    st.pyplot(fig2)
+
+    col1, col2 = st.columns(2)
+    col1.button("⬅ Previous", on_click=prev_page)
+    col2.button("Next ➝", on_click=next_page)
+
+# ==========================================================
+# PAGE 2 – KORELASI (2 GRAFIK)
+# ==========================================================
+elif st.session_state.page == 2:
 
     st.header("Korelasi Antar Soal")
 
     corr = indikator.corr()
 
     st.subheader("Grafik 1 – Heatmap Keseluruhan")
-
-    fig, ax = plt.subplots(figsize=(8,6))
+    fig, ax = plt.subplots(figsize=(6,5))
     im = ax.imshow(corr, cmap="RdPu", vmin=-1, vmax=1)
     plt.colorbar(im, ax=ax)
     ax.set_xticks(range(len(corr.columns)))
@@ -120,12 +147,11 @@ elif st.session_state.page == 1:
     ax.set_yticklabels(corr.columns)
     st.pyplot(fig)
 
-    st.subheader("Grafik 2 – Korelasi Detail Satu Soal")
+    st.subheader("Grafik 2 – Detail Korelasi Soal")
+    soal_korelasi = st.selectbox("Pilih Soal:", corr.columns)
 
-    soal_korelasi = st.selectbox("Pilih soal:", corr.columns)
-
-    fig2, ax2 = plt.subplots(figsize=(10,4))
-    ax2.bar(corr.columns, corr[soal_korelasi], color="#880e4f")
+    fig2, ax2 = plt.subplots(figsize=(8,3))
+    ax2.bar(corr.columns, corr[soal_korelasi])
     ax2.axhline(0, linestyle="--")
     ax2.tick_params(axis='x', rotation=90)
     st.pyplot(fig2)
@@ -135,9 +161,9 @@ elif st.session_state.page == 1:
     col2.button("Next ➝", on_click=next_page)
 
 # ==========================================================
-# PAGE 2 – REGRESI
+# PAGE 3 – REGRESI (2 GRAFIK)
 # ==========================================================
-elif st.session_state.page == 2:
+elif st.session_state.page == 3:
 
     st.header("Analisis Regresi")
 
@@ -151,19 +177,17 @@ elif st.session_state.page == 2:
     coef = model.params[1:]
 
     st.subheader("Grafik 1 – Semua Koefisien")
-
-    fig1, ax1 = plt.subplots(figsize=(10,4))
-    ax1.bar(coef.index, coef.values, color="#ad1457")
+    fig1, ax1 = plt.subplots(figsize=(8,3))
+    ax1.bar(coef.index, coef.values)
     ax1.axhline(0, linestyle="--")
     ax1.tick_params(axis='x', rotation=90)
     st.pyplot(fig1)
 
-    st.subheader("Grafik 2 – Detail Soal Paling Berpengaruh")
+    st.subheader("Grafik 2 – Detail Koefisien")
+    soal_detail = st.selectbox("Pilih Variabel:", coef.index)
 
-    soal_detail = st.selectbox("Pilih variabel untuk detail:", coef.index)
-
-    fig2, ax2 = plt.subplots(figsize=(5,4))
-    ax2.bar(soal_detail, coef[soal_detail], color="#6a1b9a")
+    fig2, ax2 = plt.subplots(figsize=(5,3))
+    ax2.bar(soal_detail, coef[soal_detail])
     ax2.axhline(0, linestyle="--")
     st.pyplot(fig2)
 
@@ -174,9 +198,9 @@ elif st.session_state.page == 2:
     col2.button("Next ➝", on_click=next_page)
 
 # ==========================================================
-# PAGE 3 – SEGMENTASI
+# PAGE 4 – SEGMENTASI
 # ==========================================================
-elif st.session_state.page == 3:
+elif st.session_state.page == 4:
 
     st.header("Segmentasi Performa")
 
@@ -196,7 +220,7 @@ elif st.session_state.page == 3:
     angles = np.linspace(0, 2*np.pi, len(labels), endpoint=False).tolist()
     angles += angles[:1]
 
-    fig = plt.figure(figsize=(6,6))
+    fig = plt.figure(figsize=(5,5))
     ax = plt.subplot(polar=True)
 
     for i, row in cluster_mean.iterrows():
